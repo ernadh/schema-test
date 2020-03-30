@@ -70,15 +70,28 @@ where
         <V as Value>::Key: std::borrow::Borrow<str> + std::convert::AsRef<str> + std::fmt::Display + std::fmt::Debug,
     {
         let schema = schema::compile(def, None, schema::CompilationSettings::new(self.keywords.clone(), ban_unknown))?;
-        self.add_and_return(schema)
+        self.add_and_return(schema.id.clone().as_ref().unwrap(), schema)
     }
 
     fn add_and_return<'scope, 'schema: 'scope>(
         &'scope mut self,
+        id: &url::Url,
         schema: schema::Schema<V>,
-    ) -> Result<schema::ScopedSchema<'scope, 'scope, V>, schema::SchemaError> {
-        let id_str = "ernad".to_string();
-        self.schemes.insert(id_str.clone(), schema);
-        Ok(schema::ScopedSchema::new(self, &self.schemes[&id_str]))
+    ) -> Result<schema::ScopedSchema<'scope, 'scope, V>, schema::SchemaError> 
+    {
+        let (id_str, fragment) = helpers::serialize_schema_path(id);
+        dbg!(id_str.clone());
+        dbg!(fragment.clone());
+
+        if fragment.is_some() {
+            return Err(schema::SchemaError::WrongId);
+        }
+
+        if !self.schemes.contains_key(&id_str) {
+            self.schemes.insert(id_str.clone(), schema);
+            Ok(schema::ScopedSchema::new(self, &self.schemes[&id_str]))
+        } else {
+            Err(schema::SchemaError::IdConflicts)
+        }
     }
 }

@@ -1,9 +1,32 @@
 use value_trait::*;
 use super::scope;
+use super::error;
 use std::fmt;
 
-pub use self::ref_::Ref;
-pub mod ref_;
+/*
+macro_rules! nonstrict_process {
+    ($val:expr, $path:ident) => {{
+        let maybe_val = $val;
+        if maybe_val.is_none() {
+            return $crate::json_schema::validators::ValidationState::new();
+        }
+
+        maybe_val.unwrap()
+    }};
+}
+*/
+
+pub mod const_;
+//pub mod contains;
+//pub mod dependencies;
+//pub mod ref_;
+//pub mod required;
+
+pub use self::const_::Const;
+//pub use self::contains::Contains;
+//pub use self::dependencies::Dependencies;
+//pub use self::ref_::Ref;
+//pub use self::required::Required;
 
 pub trait Validator<V>
 where

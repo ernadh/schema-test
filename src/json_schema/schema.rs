@@ -73,6 +73,18 @@ pub struct WalkContext<'walk> {
     pub scopes: &'walk mut hashbrown::HashMap<String, Vec<String>>,
 }
 
+impl<'walk> WalkContext<'walk> {
+    pub fn escaped_fragment(&self) -> String {
+        helpers::connect(
+            self.fragment
+                .iter()
+                .map(|s| s.as_ref())
+                .collect::<Vec<&str>>()
+                .as_ref(),
+        )
+    }
+}
+
 impl<'scope, 'schema, V> ScopedSchema<'scope, 'schema, V>
 where
     V: Value,
@@ -89,9 +101,11 @@ where
 
     pub fn validate(&self, data: &V) -> validators::ValidationState
     where
+        V: Value + std::fmt::Debug,
         <V as Value>::Key: std::borrow::Borrow<str>
         + std::convert::AsRef<str>,
     {
+        dbg!(data.clone());
         self.schema.validate_in_scope(data, "", &self.scope)
     }
 
@@ -211,6 +225,7 @@ where
             },
             &settings,
         )?;
+
         let schema = Schema {
             id: Some(id),
             schema,
@@ -226,7 +241,7 @@ where
     fn compile_keywords<'key>(
         source: V,
         context: &WalkContext<'key>,
-        settings: &CompilationSettings<V>,
+        settings: &'key CompilationSettings<V>,
     ) -> Result<validators::Validators<V>, SchemaError>
     where
         V: Value + std::convert::From<simd_json::value::owned::Value> + std::clone::Clone,
@@ -256,8 +271,7 @@ where
 
                         let is_exclusive_keyword = keyword.keyword.is_exclusive();
 
-                        //if let Some(validator) = keyword.keyword.compile(&source, context)? {
-                        if let Some(validator) = keyword.keyword.compile()? {
+                        if let Some(validator) = keyword.keyword.compile(&source, context)? {
                             if is_exclusive_keyword {
                                 validators = vec![validator];
                             } else {
@@ -278,6 +292,14 @@ where
                 }
             } else {
                 break;
+            }
+        }
+
+        if settings.ban_unknown_keywords && !not_consumed.is_empty() {
+            for key in not_consumed.iter() {
+                if !ALLOW_NON_CONSUMED_KEYS.contains(&key[..]) {
+                    return Err(SchemaError::UnknownKey(key.to_string()));
+                }
             }
         }
 
