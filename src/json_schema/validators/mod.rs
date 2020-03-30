@@ -28,12 +28,11 @@ pub use self::const_::Const;
 //pub use self::ref_::Ref;
 //pub use self::required::Required;
 
-pub trait Validator<V>
-where
-    V: Value,
+pub trait Validator
 {
-    fn validate(&self, item: &V, _: &str, _: &scope::Scope<V>) -> ValidationState
+    fn validate<V>(&self, item: &V, _: &str, _: &scope::Scope<V>) -> ValidationState
     where
+        V: Value,
         <V as Value>::Key:
             std::borrow::Borrow<str> + std::hash::Hash + Eq + std::convert::AsRef<str>;
 }
@@ -62,14 +61,12 @@ impl ValidationState {
     }
 }
 
-impl<V> fmt::Debug for dyn Validator<V> + Send + Sync
-where
-    V: Value,
+impl fmt::Debug for dyn Validator + Send + Sync
 {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt.write_str("<validator>")
     }
 }
 
-pub type BoxedValidator<V> = Box<dyn Validator<V> + Send + Sync>;
-pub type Validators<V> = Vec<BoxedValidator<V>>;
+pub type BoxedValidator = Box<dyn Validator + Send + Sync>;
+pub type Validators = Vec<BoxedValidator>;

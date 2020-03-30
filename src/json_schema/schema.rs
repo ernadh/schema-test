@@ -19,7 +19,7 @@ where
     // JSON that defines schema
     source: V,
     tree: collections::BTreeMap<String, Schema<V>>,
-    validators: validators::Validators<V>,
+    validators: validators::Validators,
     scopes: hashbrown::HashMap<String, Vec<String>>,
 }
 
@@ -37,7 +37,7 @@ pub struct CompilationSettings<V>
 where
     V: Value,
 {
-    pub keywords: keywords::KeywordMap<V>,
+    pub keywords: keywords::KeywordMap,
     pub ban_unknown_keywords: bool,
 }
 
@@ -46,7 +46,7 @@ where
     V: Value,
 {
     pub fn new(
-        keywords: keywords::KeywordMap<V>,
+        keywords: keywords::KeywordMap,
         ban_unknown_keywords: bool,
     ) -> CompilationSettings<V> {
         CompilationSettings {
@@ -241,8 +241,8 @@ where
     fn compile_keywords<'key>(
         source: V,
         context: &WalkContext<'key>,
-        settings: &'key CompilationSettings<V>,
-    ) -> Result<validators::Validators<V>, SchemaError>
+        settings: &CompilationSettings<V>,
+    ) -> Result<validators::Validators, SchemaError>
     where
         V: Value + std::convert::From<simd_json::value::owned::Value> + std::clone::Clone,
         <V as Value>::Key: std::borrow::Borrow<str>

@@ -9,7 +9,7 @@ pub struct Scope<V>
 where
     V: Value,
 {
-    keywords: keywords::KeywordMap<V>,
+    keywords: keywords::KeywordMap,
     schemes: HashMap<String, schema::Schema<V>>,
 }
 
@@ -17,7 +17,7 @@ impl<V> Scope<V>
 where
     V: Value,
 {
-    pub fn new<'scope, 'schema: 'scope, 'data: 'schema>() -> Scope<V>
+    pub fn new<'scope>() -> Scope<V>
     where
         V: Value + std::convert::From<simd_json::value::owned::Value> + std::clone::Clone + std::marker::Sync + std::marker::Send + std::cmp::PartialEq + std::fmt::Display,
         <V as Value>::Key: std::borrow::Borrow<str> + std::convert::AsRef<str> + std::fmt::Display + std::marker::Sync + std::marker::Send + std::fmt::Debug,
@@ -60,7 +60,7 @@ where
         })
     }
 
-    pub fn compile_and_return<'scope, 'schema: 'scope, 'data: 'schema>(
+    pub fn compile_and_return<'scope>(
         &'scope mut self,
         def: V,
         ban_unknown: bool,
@@ -73,7 +73,7 @@ where
         self.add_and_return(schema.id.clone().as_ref().unwrap(), schema)
     }
 
-    fn add_and_return<'scope, 'schema: 'scope>(
+    fn add_and_return<'scope>(
         &'scope mut self,
         id: &url::Url,
         schema: schema::Schema<V>,
